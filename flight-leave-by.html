@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leave by — when to head to the airport</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800&display=swap" rel="stylesheet">
+<style>
+  /* ---------- tokens ---------- */
+  :root{
+    --night:#0C1A28;        /* pre-dawn airport window */
+    --panel:#14283C;
+    --panel-2:#1B3550;
+    --sign:#F2C20A;         /* signage yellow — the one loud colour */
+    --paper:#EEF3F8;
+    --muted:#8399AE;
+    --line:#26415C;
+    --alert:#E8674F;
+    --r:6px;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{
+    background:var(--night);
+    color:var(--paper);
+    font-family:"Archivo", system-ui, -apple-system, sans-serif;
+    font-size:16px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    padding:20px 18px 56px;
+  }
+  .wrap{max-width:460px; margin:0 auto;}
+
+  /* ---------- masthead ---------- */
+  header{
+    border-bottom:2px solid var(--sign);
+    padding-bottom:14px;
+    margin-bottom:26px;
+  }
+  h1{
+    font-size:30px;
+    font-weight:800;
+    letter-spacing:-0.02em;
+    line-height:1.05;
+    margin:0 0 6px;
+  }
+  header p{margin:0; color:var(--muted); font-size:14px; max-width:34ch;}
+
+  /* ---------- form ---------- */
+  .field{margin-bottom:18px;}
+  label{display:block; font-size:13px; font-weight:500; color:var(--muted); margin-bottom:6px;}
+  input[type=datetime-local], input[type=number], select{
+    width:100%;
+    font:inherit;
+    font-size:16px;
+    color:var(--paper);
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--r);
+    padding:12px 13px;
+    appearance:none;
+  }
+  input:focus-visible, select:focus-visible, button:focus-visible, .seg button:focus-visible{
+    outline:3px solid var(--sign);
+    outline-offset:2px;
+  }
+  .hint{font-size:12px; color:var(--muted); margin:6px 0 0;}
+
+  /* segmented toggles */
+  .seg{display:flex; gap:0; border:1px solid var(--line); border-radius:var(--r); overflow:hidden;}
+  .seg button{
+    flex:1;
+    font:inherit;
+    font-size:15px;
+    padding:11px 8px;
+    background:var(--panel);
+    color:var(--muted);
+    border:0;
+    cursor:pointer;
+  }
+  .seg button + button{border-left:1px solid var(--line);}
+  .seg button[aria-pressed=true]{background:var(--panel-2); color:var(--paper); font-weight:600;}
+
+  .go{
+    width:100%;
+    font:inherit;
+    font-size:17px;
+    font-weight:700;
+    color:var(--night);
+    background:var(--sign);
+    border:0;
+    border-radius:var(--r);
+    padding:15px;
+    margin-top:8px;
+    cursor:pointer;
+  }
+  .go:hover{background:#ffd21f;}
+
+  /* ---------- result ---------- */
+  #result[hidden]{display:none;}
+  .verdict{
+    border-top:2px solid var(--sign);
+    margin-top:34px;
+    padding-top:22px;
+  }
+  .verdict .lede{font-size:14px; color:var(--muted); margin:0 0 2px;}
+  .clock{
+    font-size:76px;
+    font-weight:800;
+    letter-spacing:-0.045em;
+    line-height:0.95;
+    color:var(--sign);
+    font-variant-numeric:tabular-nums;
+    margin:0;
+  }
+  .day{margin:8px 0 0; font-size:15px;}
+  .gap{margin:4px 0 0; font-size:14px; color:var(--muted);}
+  .flag{
+    margin:16px 0 0;
+    padding:11px 13px;
+    border-left:3px solid var(--alert);
+    background:rgba(232,103,79,.1);
+    font-size:14px;
+    border-radius:0 var(--r) var(--r) 0;
+  }
+
+  /* ---------- timeline ---------- */
+  .plan{margin:30px 0 0; padding:0; list-style:none; position:relative;}
+  .plan::before{
+    content:"";
+    position:absolute;
+    left:53px; top:9px; bottom:9px;
+    width:1px; background:var(--line);
+  }
+  .plan li{display:grid; grid-template-columns:44px 20px 1fr; gap:0 12px; padding:9px 0;}
+  .plan .t{
+    font-size:15px; font-weight:600;
+    font-variant-numeric:tabular-nums;
+    text-align:right;
+    color:var(--paper);
+    padding-top:1px;
+  }
+  .plan .dot{position:relative;}
+  .plan .dot::after{
+    content:"";
+    position:absolute; left:2px; top:8px;
+    width:7px; height:7px; border-radius:50%;
+    background:var(--line);
+    box-shadow:0 0 0 4px var(--night);
+  }
+  .plan li.key .dot::after{background:var(--sign); width:9px; height:9px; left:1px;}
+  .plan li.key .t{color:var(--sign);}
+  .plan .what{font-size:15px;}
+  .plan .why{display:block; font-size:13px; color:var(--muted);}
+
+  footer{margin-top:38px; padding-top:16px; border-top:1px solid var(--line); font-size:13px; color:var(--muted);}
+  footer b{color:var(--paper); font-weight:600;}
+
+  @media (prefers-reduced-motion:no-preference){
+    .clock{transition:opacity .15s ease;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Leave by</h1>
+    <p>Works backwards from your departure time so you stop guessing at 5am.</p>
+  </header>
+
+  <div class="field">
+    <label for="dep">Flight departs</label>
+    <input type="datetime-local" id="dep">
+  </div>
+
+  <div class="field">
+    <label for="apt">Departing from</label>
+    <select id="apt"></select>
+  </div>
+
+  <div class="field">
+    <label id="l-trip">Flight type</label>
+    <div class="seg" role="group" aria-labelledby="l-trip">
+      <button type="button" data-trip="domestic" aria-pressed="false">Domestic</button>
+      <button type="button" data-trip="international" aria-pressed="true">International</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <label id="l-bag">Checked bag</label>
+    <div class="seg" role="group" aria-labelledby="l-bag">
+      <button type="button" data-bag="yes" aria-pressed="false">Checking a bag</button>
+      <button type="button" data-bag="no" aria-pressed="true">Carry-on only</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="travel">Journey to the airport, in minutes</label>
+    <input type="number" id="travel" min="0" max="600" step="5" value="60">
+    <p class="hint">Your own estimate. Check maps for the time of day you're travelling and round up.</p>
+  </div>
+
+  <button class="go" id="go">Work out my leave time</button>
+
+  <section id="result" hidden aria-live="polite"></section>
+
+  <footer>
+    <b>Queue times are estimates.</b> They come from a hand-kept table, not live data, so treat them as a sensible default rather than a promise. Public holidays and school breaks run longer.
+  </footer>
+
+</div>
+
+<script>
+/* ------------------------------------------------------------------
+   1. THE DATA
+   This table is the actual product. Everything else is arithmetic.
+   All values in minutes.
+     security     typical queue, off-peak
+     peakExtra    added during 06:00-09:00 and 17:00-20:00
+     bagDrop      counter closes this long before departure
+     walkToGate   security exit to gate, incl. any train
+------------------------------------------------------------------ */
+const AIRPORTS = {
+  KUL: {name:"Kuala Lumpur — KLIA",        security:{domestic:25, international:40}, peakExtra:20, bagDrop:60, walkToGate:15},
+  PEN: {name:"Penang",                     security:{domestic:15, international:25}, peakExtra:10, bagDrop:45, walkToGate:8},
+  BKI: {name:"Kota Kinabalu",              security:{domestic:15, international:25}, peakExtra:10, bagDrop:45, walkToGate:8},
+  SIN: {name:"Singapore — Changi",         security:{domestic:15, international:20}, peakExtra:10, bagDrop:60, walkToGate:20},
+  BKK: {name:"Bangkok — Suvarnabhumi",     security:{domestic:25, international:45}, peakExtra:25, bagDrop:60, walkToGate:18},
+  DMK: {name:"Bangkok — Don Mueang",       security:{domestic:25, international:35}, peakExtra:20, bagDrop:60, walkToGate:10},
+  CGK: {name:"Jakarta — Soekarno-Hatta",   security:{domestic:25, international:40}, peakExtra:25, bagDrop:60, walkToGate:15},
+  MNL: {name:"Manila",                     security:{domestic:30, international:45}, peakExtra:30, bagDrop:60, walkToGate:15},
+  SGN: {name:"Ho Chi Minh City",           security:{domestic:25, international:40}, peakExtra:25, bagDrop:60, walkToGate:10},
+  HKG: {name:"Hong Kong",                  security:{domestic:20, international:35}, peakExtra:15, bagDrop:60, walkToGate:20},
+  TPE: {name:"Taipei — Taoyuan",           security:{domestic:15, international:30}, peakExtra:15, bagDrop:60, walkToGate:15},
+  NRT: {name:"Tokyo — Narita",             security:{domestic:15, international:30}, peakExtra:15, bagDrop:60, walkToGate:18},
+  HND: {name:"Tokyo — Haneda",             security:{domestic:15, international:25}, peakExtra:15, bagDrop:60, walkToGate:15},
+  ICN: {name:"Seoul — Incheon",            security:{domestic:20, international:35}, peakExtra:20, bagDrop:60, walkToGate:18},
+  DXB: {name:"Dubai",                      security:{domestic:25, international:40}, peakExtra:25, bagDrop:60, walkToGate:25},
+  DEL: {name:"Delhi",                      security:{domestic:30, international:45}, peakExtra:30, bagDrop:60, walkToGate:18},
+  LHR: {name:"London — Heathrow",          security:{domestic:25, international:40}, peakExtra:25, bagDrop:60, walkToGate:20},
+  JFK: {name:"New York — JFK",             security:{domestic:30, international:45}, peakExtra:30, bagDrop:60, walkToGate:20},
+  SYD: {name:"Sydney",                     security:{domestic:20, international:35}, peakExtra:15, bagDrop:60, walkToGate:15},
+};
+
+const BOARDING_CLOSES = 20;  // gate shuts this long before departure
+const SLACK           = 20;  // your buffer for the unexpected
+
+/* ------------------------------------------------------------------
+   2. THE MATHS
+   One rule matters: with a checked bag, the counter cutoff often
+   binds earlier than the security queue. Take whichever is earlier.
+------------------------------------------------------------------ */
+const mins = (date, m) => new Date(date.getTime() - m * 60000);
+const isPeak = d => { const h = d.getHours(); return (h >= 6 && h < 9) || (h >= 17 && h < 20); };
+
+function plan({departure, airport, trip, bag, travel}){
+  const a = AIRPORTS[airport];
+
+  const boardingCloses   = mins(departure, BOARDING_CLOSES);
+  const throughSecurity  = mins(boardingCloses, a.walkToGate);
+
+  // Peak depends on when you'd be queueing, so estimate once, then settle.
+  let queue = a.security[trip];
+  let securityStart = mins(throughSecurity, queue);
+  if (isPeak(securityStart)) {
+    queue += a.peakExtra;
+    securityStart = mins(throughSecurity, queue);
+  }
+
+  const bagDeadline = bag ? mins(departure, a.bagDrop) : null;
+  const bagBinds    = bag && bagDeadline < securityStart;
+  const arrive      = bagBinds ? bagDeadline : securityStart;
+  const leaveBy     = mins(arrive, SLACK + travel);
+
+  return {a, queue, peak:isPeak(securityStart), boardingCloses, throughSecurity,
+          securityStart, bagDeadline, bagBinds, arrive, leaveBy};
+}
+
+/* ------------------------------------------------------------------
+   3. THE DISPLAY
+------------------------------------------------------------------ */
+const clock = d => d.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit", hour12:false});
+const dayOf = d => d.toLocaleDateString([], {weekday:"long", day:"numeric", month:"long"});
+const span  = m => { const h = Math.floor(m/60), r = m%60;
+                     return h ? (r ? `${h} h ${r} min` : `${h} h`) : `${r} min`; };
+
+function render(p, departure){
+  const sameDay = p.leaveBy.toDateString() === departure.toDateString();
+  const ahead   = Math.round((departure - p.leaveBy) / 60000);
+
+  const rows = [
+    {t:p.leaveBy,         what:"Leave home",     why:`${span(Math.round((p.arrive - p.leaveBy)/60000))} of travel and slack`, key:true},
+    {t:p.arrive,          what:"Arrive at the airport", why:`${SLACK} min of slack built in`},
+    p.bag ? null : null,
+    {t:p.securityStart,   what:"Join the security queue", why:`${p.queue} min typical${p.peak ? " at this hour, which is busy" : ", off-peak"}`},
+    {t:p.throughSecurity, what:"Through security", why:`${p.a.walkToGate} min to reach the gate`},
+    {t:p.boardingCloses,  what:"Boarding closes", why:"Miss this and the flight goes without you"},
+    {t:departure,         what:"Departure",      why:"", key:true},
+  ].filter(Boolean);
+
+  if (p.bagDeadline) rows.splice(2, 0, {t:p.bagDeadline, what:"Bag drop closes", why:`${p.a.bagDrop} min before departure`});
+  rows.sort((x, y) => x.t - y.t);
+
+  const list = rows.map(r => `
+    <li class="${r.key ? "key" : ""}">
+      <span class="t">${clock(r.t)}</span>
+      <span class="dot" aria-hidden="true"></span>
+      <span class="what">${r.what}${r.why ? `<span class="why">${r.why}</span>` : ""}</span>
+    </li>`).join("");
+
+  const flag = p.bagBinds
+    ? `<p class="flag">The bag drop cutoff is the tight part here, not security. Dropping the checked bag would buy you ${span(Math.round((p.securityStart - p.bagDeadline)/60000))}.</p>`
+    : "";
+
+  document.getElementById("result").innerHTML = `
+    <div class="verdict">
+      <p class="lede">Leave by</p>
+      <p class="clock">${clock(p.leaveBy)}</p>
+      <p class="day">${sameDay ? dayOf(departure) : dayOf(p.leaveBy) + " — the day before"}</p>
+      <p class="gap">${span(ahead)} before departure, from ${p.a.name}</p>
+      ${flag}
+    </div>
+    <ol class="plan">${list}</ol>`;
+  document.getElementById("result").hidden = false;
+}
+
+/* ------------------------------------------------------------------
+   4. WIRING
+------------------------------------------------------------------ */
+const sel = document.getElementById("apt");
+for (const [code, a] of Object.entries(AIRPORTS)) {
+  sel.insertAdjacentHTML("beforeend", `<option value="${code}">${a.name}</option>`);
+}
+sel.value = "KUL";
+
+// default the picker to tomorrow morning, the case people worry about
+const t = new Date(Date.now() + 864e5);
+t.setHours(9, 0, 0, 0);
+document.getElementById("dep").value =
+  new Date(t - t.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+
+let trip = "international", bag = false;
+document.querySelectorAll("[data-trip]").forEach(b => b.onclick = () => {
+  trip = b.dataset.trip;
+  document.querySelectorAll("[data-trip]").forEach(x => x.setAttribute("aria-pressed", x === b));
+});
+document.querySelectorAll("[data-bag]").forEach(b => b.onclick = () => {
+  bag = b.dataset.bag === "yes";
+  document.querySelectorAll("[data-bag]").forEach(x => x.setAttribute("aria-pressed", x === b));
+});
+
+document.getElementById("go").onclick = () => {
+  const raw = document.getElementById("dep").value;
+  if (!raw) { alert("Pick a departure date and time first."); return; }
+  const departure = new Date(raw);
+  const travel = Math.max(0, Number(document.getElementById("travel").value) || 0);
+
+  const p = plan({departure, airport: sel.value, trip, bag, travel});
+  p.bag = bag;
+  render(p, departure);
+  document.getElementById("result").scrollIntoView({behavior:"smooth", block:"start"});
+};
+</script>
+</body>
+</html>
